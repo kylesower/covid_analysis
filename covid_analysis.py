@@ -131,12 +131,14 @@ if use_states:
     locations = [np.array(states.loc[state])[0] for state in rates]
     title1 = 'Estimated Max COVID-19 Cases Per Million Population'
     title2 = 'Estimated Transmission Rate'
+    filename_prefix = 'US'
 else:
     z = [rates[state][0]/pop.loc[state].max()*1e6 for state in rates]
     locationmode = 'ISO-3'
     locations = [np.array(states.loc[state])[1] for state in rates]
     title1 = 'Estimated Max COVID-19 Cases Per Million Population'
     title2 = 'Estimated Transmission Rate'
+    filename_prefix = 'global'
     
 fig = go.Figure(data=go.Choropleth(
                 z = z,
@@ -147,7 +149,7 @@ fig = go.Figure(data=go.Choropleth(
                 locations = locations,
                 colorbar_title = title1
                 ))
-pyo.plot(fig)
+pyo.plot(fig,filename=filename_prefix+'_covid_cases.html')
 fig = go.Figure(data=go.Choropleth(
                 z=[rates[state][1] for state in rates],
                 #autocolorscale = True,
@@ -157,4 +159,4 @@ fig = go.Figure(data=go.Choropleth(
                 locations = locations,
                 colorbar_title = title2
                 ))       
-pyo.plot(fig)
+pyo.plot(fig,filename=filename_prefix+'_covid_transmission_rate.html')
