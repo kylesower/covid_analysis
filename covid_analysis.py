@@ -14,27 +14,27 @@ import plotly.graph_objects as go
 import plotly.offline as pyo
 
 plt.style.use('seaborn')
-use_states = True
-fit_deaths = False
-date_sub = 20
-url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/'
+use_states = True # Set to true to analyze US states, false to analyze countries
+fit_deaths = False # Set to true to analyze deaths instead of confirmed cases
+date_sub = 20 # integer: Increase this number to start country data at an earlier date
+url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/' # url for covid-19 data
 if use_states:
     confirmed = pd.read_csv(url+'time_series_covid19_confirmed_US.csv')
     deaths = pd.read_csv(url+'time_series_covid19_deaths_US.csv')
-    stateconf = confirmed.groupby('Province_State').sum().iloc[:,50:].T#.drop('New York').T
-    statedead = deaths.groupby('Province_State').sum().iloc[:,50:].T#.drop('New York').T
+    conf = confirmed.groupby('Province_State').sum().iloc[:,50:].T#.drop('New York').T
+    dead = deaths.groupby('Province_State').sum().iloc[:,50:].T#.drop('New York').T
     states = pd.read_csv('statecodes.csv', index_col = 'state')
 else:
     states = pd.read_csv('countrycodes.csv', index_col = 'name')
     confirmed = pd.read_csv(url+'time_series_covid19_confirmed_global.csv')
     deaths = pd.read_csv(url+'time_series_covid19_deaths_global.csv')
-    stateconf = confirmed.groupby('Country/Region').sum().iloc[:,(40-date_sub):].T
-    statedead = deaths.groupby('Country/Region').sum().iloc[:,(40-date_sub):].T
+    conf = confirmed.groupby('Country/Region').sum().iloc[:,(40-date_sub):].T
+    dead = deaths.groupby('Country/Region').sum().iloc[:,(40-date_sub):].T
 
 if fit_deaths:
-    df = statedead
+    df = dead
 else:
-    df = stateconf
+    df = conf
 if use_states:
     pop = pd.read_csv('statepop.csv', index_col = 'State')
 else:
@@ -76,22 +76,22 @@ df = df.T.drop(outliers).T
 # If you want to limit your analysis to states under a certain threshold of dead/cases,
 # uncomment the section below
 '''
-for state in statedead.T.index:
+for state in dead.T.index:
     print(state)
-    if statedead.loc['4/1/20'][state]>50:
+    if dead.loc['4/1/20'][state]>50:
         print(state)
-        statedead = statedead.T.drop(state).T
-for state in stateconf.T.index:
+        dead = dead.T.drop(state).T
+for state in conf.T.index:
     print(state)
-    if stateconf.loc['4/1/20'][state]>2000:
+    if conf.loc['4/1/20'][state]>2000:
         print(state)
-        stateconf = stateconf.T.drop(state).T
+        conf = conf.T.drop(state).T
 '''
 
 def fit(x,a,c,d):
     return a/(1+np.exp(-c*(x-d)))
 
-#plt.plot(stateconf)
+#plt.plot(conf)
 #plt.xticks([5*i for i in range(6)])
 #plt.legend()
 rates = {}
@@ -148,6 +148,5 @@ fig = go.Figure(data=go.Choropleth(
                 colorscale='Reds',
                 locations = locations,
                 colorbar_title = title2
-                ))
-            
+                ))       
 pyo.plot(fig)
