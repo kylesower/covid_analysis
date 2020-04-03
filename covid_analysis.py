@@ -19,7 +19,7 @@ def fit(x,a,c,d):
     return a/(1+np.exp(-c*(x-d)))
 
 plt.style.use('seaborn')
-use_states = False # Set to true to analyze US states, false to analyze countries
+use_states = True # Set to true to analyze US states, false to analyze countries
 fit_deaths = False # Set to true to analyze deaths instead of confirmed cases
 date_sub = 20 # integer: Increase this number to start country data at an earlier date
 url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/' # url for covid-19 data
