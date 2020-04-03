@@ -13,16 +13,23 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.offline as pyo
 
+
+def fit(x,a,c,d): 
+    '''Logistic growth fit function''' 
+    return a/(1+np.exp(-c*(x-d)))
+
 plt.style.use('seaborn')
-use_states = True # Set to true to analyze US states, false to analyze countries
+use_states = False # Set to true to analyze US states, false to analyze countries
 fit_deaths = False # Set to true to analyze deaths instead of confirmed cases
 date_sub = 20 # integer: Increase this number to start country data at an earlier date
 url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/' # url for covid-19 data
+
+# Initialize datasets
 if use_states:
     confirmed = pd.read_csv(url+'time_series_covid19_confirmed_US.csv')
     deaths = pd.read_csv(url+'time_series_covid19_deaths_US.csv')
-    conf = confirmed.groupby('Province_State').sum().iloc[:,50:].T#.drop('New York').T
-    dead = deaths.groupby('Province_State').sum().iloc[:,50:].T#.drop('New York').T
+    conf = confirmed.groupby('Province_State').sum().iloc[:,50:].T
+    dead = deaths.groupby('Province_State').sum().iloc[:,50:].T
     states = pd.read_csv('statecodes.csv', index_col = 'state')
 else:
     states = pd.read_csv('countrycodes.csv', index_col = 'name')
@@ -35,10 +42,11 @@ if fit_deaths:
     df = dead
 else:
     df = conf
+
 if use_states:
     pop = pd.read_csv('statepop.csv', index_col = 'State')
 else:
-    pop = pd.read_csv('pop.csv',index_col = 'CountryName')
+    pop = pd.read_csv('countrypop.csv',index_col = 'CountryName')
 
 if use_states:
     outliers = ['Virgin Islands', 'Northern Mariana Islands', 'American Samoa', \
@@ -70,7 +78,8 @@ else:
                 'Togo', 'Trinidad and Tobago', 'Uganda', 'United Arab Emirates', 'Uruguay', \
                 'Venezuela', 'West Bank and Gaza', 'Zambia', 'Zimbabwe'
                 ]
-    
+   
+# Remove outliers that either had bad fits or not enough data 
 df = df.T.drop(outliers).T
 
 # If you want to limit your analysis to states under a certain threshold of dead/cases,
@@ -88,21 +97,20 @@ for state in conf.T.index:
         conf = conf.T.drop(state).T
 '''
 
-def fit(x,a,c,d):
-    return a/(1+np.exp(-c*(x-d)))
-
 #plt.plot(conf)
 #plt.xticks([5*i for i in range(6)])
 #plt.legend()
 rates = {}
 for i, state in enumerate(df.T.index):
     try:
-        popt, pcov = cf(fit,np.arange(20,20+len(df.T.loc[state])),df.T.loc[state],p0=[2*df.T.loc[state].max(),0.3,30+date_sub])
+        if use_states:
+            popt, pcov = cf(fit,np.arange(0,len(df.T.loc[state])),df.T.loc[state],p0=[2*df.T.loc[state].max(),0.3,20])
+        else:
+            popt, pcov = cf(fit,np.arange(0,len(df.T.loc[state])),df.T.loc[state],p0=[2*df.T.loc[state].max(),0.3,20+date_sub])
     except:
         print(state)
-    print(state)
-    y = fit(np.arange(20,20+len(df.T.loc[state])),*popt)
-    
+
+    y = fit(np.arange(0,len(df.T.loc[state])),*popt)
     plt.plot(df.loc[:][state],label='data')
     plt.plot(y,label='fit')
     plt.xticks([5*i for i in range(6)])
